@@ -1,6 +1,8 @@
 import asyncio
 import socket
 
+from syncopate.server import handle_client
+
 
 async def custom_start_server(client_handler, host, port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,22 +24,6 @@ async def custom_start_server(client_handler, host, port):
             loop.create_task(client_handler(reader, writer))
 
     await accept_connections()
-
-
-async def handle_client(reader, writer):
-    addr = writer.get_extra_info("peername")
-    print(f"New connection from {addr}")
-
-    try:
-        while data := await reader.readline():
-            print(f"Received: {data.decode().strip()} from {addr}")
-            writer.write(data)
-            await writer.drain()
-    except asyncio.IncompleteReadError:
-        print(f"Connection with {addr} closed")
-    finally:
-        writer.close()
-        await writer.wait_closed()
 
 
 async def main():
