@@ -27,6 +27,17 @@ class Server:
             headers[key.strip()] = value.strip()
         return method, path, headers
 
+    @staticmethod
+    def build_http_response(body, status_code=200, status_message="OK"):
+        response_lines = [
+            f"HTTP/1.1 {status_code} {status_message}",
+            "Content-Type: text/html",
+            f"Content-Length: {len(body)}",
+            "",
+            body,
+        ]
+        return "\r\n".join(response_lines).encode()
+
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info("peername")
         logger.info("New connection from %s", addr)
@@ -42,8 +53,7 @@ class Server:
                 addr,
                 headers,
             )
-            response_text = "HTTP/1.1 200 OK\r\n\r\n<h1>Hello, world!</h1>"
-            writer.write(response_text.encode())
+            writer.write(self.build_http_response("<h1>Hello, World!</h1>"))
         except asyncio.IncompleteReadError:
             logger.info("Connection with %s closed", addr)
         finally:
