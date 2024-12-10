@@ -1,0 +1,6 @@
+[tool.ruff.lint]
+# pyflakes, pycodestyle, isort
+select = ["F", "E", "W", "I001", "B"]
+
+[tool.ruff.lint.isort]
+known-third-party = []
