@@ -1,7 +1,14 @@
 import asyncio
+import logging
 import socket
 
 from syncopate.server import handle_client
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s %(message)s",
+)
+logger = logging.getLogger("syncopate")
 
 
 async def custom_start_server(client_handler, host, port):
@@ -12,12 +19,12 @@ async def custom_start_server(client_handler, host, port):
     server_socket.setblocking(False)
 
     loop = asyncio.get_running_loop()
-    print(f"Server listening on {host}:{port}")
+    logger.info("Server listening on %s:%s", host, port)
 
     async def accept_connections():
         while True:
             client_socket, addr = await loop.sock_accept(server_socket)
-            print(f"Connection accepted from {addr}")
+            logger.info("Connection accepted from %s", addr)
 
             reader, writer = await asyncio.open_connection(sock=client_socket)
 

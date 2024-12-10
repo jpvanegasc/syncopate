@@ -1,4 +1,8 @@
 import asyncio
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def parse_http_request(request_text):
@@ -16,17 +20,23 @@ def parse_http_request(request_text):
 
 async def handle_client(reader, writer):
     addr = writer.get_extra_info("peername")
-    print(f"New connection from {addr}")
+    logger.info("New connection from %s", addr)
 
     try:
         data = await reader.readuntil(b"\r\n\r\n")
         request_text = data.decode()
         method, path, headers = parse_http_request(request_text)
-        print(f"Received {method} request for {path} from {addr}, {headers=!r}")
+        logger.info(
+            "Received %s request for %s from %s, headers: %s",
+            method,
+            path,
+            addr,
+            headers,
+        )
         response_text = "HTTP/1.1 200 OK\r\n\r\n<h1>Hello, world!</h1>"
         writer.write(response_text.encode())
     except asyncio.IncompleteReadError:
-        print(f"Connection with {addr} closed")
+        logger.info("Connection with %s closed", addr)
     finally:
         writer.close()
         await writer.wait_closed()
