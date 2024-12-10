@@ -17,6 +17,9 @@ envsetup: $(VENV_DIR)
 	$(VENV_RUN) pip install -r requirements/main.txt
 	$(VENV_RUN) pre-commit install
 
+run: $(VENV_DIR) ## Run the application
+	$(VENV_RUN) PYTHONPATH=. python3 syncopate/main.py
+
 lint: $(VENV_DIR) ## Run linters via pre-commit
 	$(VENV_RUN) pre-commit run --all-files
 
