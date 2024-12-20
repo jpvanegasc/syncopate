@@ -51,8 +51,7 @@ class Server:
 
     def serve(self):
         loop = EventLoop()
-        socket = loop.create_connection(self.host, self.port)
-        loop.accept_connection(socket, self.handle_client)
+        loop.create_server(self.host, self.port, self.handle_client)
         logger.info("Server listening on %s:%s", self.host, self.port)
 
         loop.run_forever()

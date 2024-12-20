@@ -1,6 +1,7 @@
 import logging
 import selectors
-import socket
+
+from syncopate.core.server import HTTPServer, Reader, Writer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -9,41 +10,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class Reader:
-    def __init__(self, conn):
-        self.conn = conn
-        # TODO: use an actual implementation for the connection terminating
-        data = self.conn.recv(1024)
-        if not data:
-            raise EOFError("Connection closed")
-        self.data = data
-
-    def read(self):
-        return self.data
-
-
-class Writer:
-    def __init__(self, conn):
-        self.conn = conn
-
-    def write(self, data):
-        return self.conn.sendall(data)
-
-
 class EventLoop:
     def __init__(self):
         self.selector = selectors.DefaultSelector()
         self.stopped = False
 
-    def create_connection(self, host, port):
-        server_socket = socket.socket()
-        server_socket.bind((host, port))
-        server_socket.listen()
-        server_socket.setblocking(False)
+    def create_server(self, host, port, callback):
+        server = HTTPServer(host, port, callback)
 
-        return server_socket
-
-    def accept_connection(self, socket, callback):
         def connect(conn):
             try:
                 reader = Reader(conn)
@@ -59,7 +33,7 @@ class EventLoop:
             conn.setblocking(False)
             self.selector.register(conn, selectors.EVENT_READ, connect)
 
-        self.selector.register(socket, selectors.EVENT_READ, accept)
+        self.selector.register(server.socket, selectors.EVENT_READ, accept)
 
     def run_forever(self):
         while not self.stopped:
