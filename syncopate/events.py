@@ -14,20 +14,22 @@ class EventLoop:
         self.selector = selectors.DefaultSelector()
         self.stopped = False
 
-    def open_connection(self, host, port, callback):
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    def create_connection(self, host, port):
+        server_socket = socket.socket()
         server_socket.bind((host, port))
         server_socket.listen()
         server_socket.setblocking(False)
 
-        def accept_connection(server_socket):
-            conn, addr = server_socket.accept()
+        return server_socket
+
+    def accept_connection(self, socket, callback):
+        def accept(sock):
+            conn, addr = sock.accept()
             logger.info("Connection from %s", addr)
             conn.setblocking(False)
             self.selector.register(conn, selectors.EVENT_READ, callback)
 
-        self.selector.register(server_socket, selectors.EVENT_READ, accept_connection)
+        self.selector.register(socket, selectors.EVENT_READ, accept)
 
     def run_forever(self):
         while not self.stopped:
