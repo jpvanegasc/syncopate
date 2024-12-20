@@ -9,6 +9,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class Reader:
+    def __init__(self, conn):
+        self.conn = conn
+        # TODO: use an actual implementation for the connection terminating
+        data = self.conn.recv(1024)
+        if not data:
+            raise EOFError("Connection closed")
+        self.data = data
+
+    def read(self):
+        return self.data
+
+
+class Writer:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def write(self, data):
+        return self.conn.sendall(data)
+
+
 class EventLoop:
     def __init__(self):
         self.selector = selectors.DefaultSelector()
@@ -23,11 +44,20 @@ class EventLoop:
         return server_socket
 
     def accept_connection(self, socket, callback):
+        def connect(conn):
+            try:
+                reader = Reader(conn)
+            except EOFError:
+                self.selector.unregister(conn)
+                conn.close()
+                return
+            callback(reader, Writer(conn))
+
         def accept(sock):
             conn, addr = sock.accept()
             logger.info("Connection from %s", addr)
             conn.setblocking(False)
-            self.selector.register(conn, selectors.EVENT_READ, callback)
+            self.selector.register(conn, selectors.EVENT_READ, connect)
 
         self.selector.register(socket, selectors.EVENT_READ, accept)
 

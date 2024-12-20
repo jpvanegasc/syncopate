@@ -38,11 +38,8 @@ class Server:
         ]
         return "\r\n".join(response_lines).encode()
 
-    def handle_client(self, client_socket):
-        data = client_socket.recv(1024)
-        request_text = data.decode()
-        if not request_text:
-            return
+    def handle_client(self, reader, writer):
+        request_text = reader.read().decode()
         method, path, headers = self.parse_http_request(request_text)
         logger.info(
             "Received %s request for %s, headers: %s",
@@ -50,7 +47,7 @@ class Server:
             path,
             headers,
         )
-        client_socket.sendall(self.build_http_response("<h1>Hello, World!</h1>"))
+        writer.write(self.build_http_response("<h1>Hello, World!</h1>"))
 
     def serve(self):
         loop = EventLoop()
