@@ -1,10 +1,8 @@
-import socket
-
-
 class Reader:
     def __init__(self, conn):
         self.conn = conn
         # TODO: use an actual implementation for the connection terminating
+        # https://github.com/python/cpython/blob/2a66dd33dfc0b845042da9bb54aaa4e890733f54/Lib/asyncio/selector_events.py#L274
         data = self.conn.recv(1024)
         if not data:
             raise EOFError("Connection closed")
@@ -24,16 +22,10 @@ class Writer:
 
 class HTTPServer:
 
-    def __init__(self, host, port, callback):
-        self.host = host
-        self.port = port
-        self.callback = callback
-        self.socket = self.create_connection(host, port)
+    def __init__(self, loop, socket, protocol_factory):
+        self._loop = loop
+        self.socket = socket
+        self.protocol_factory = protocol_factory
 
-    def create_connection(self, host, port):
-        server_socket = socket.socket()
-        server_socket.bind((host, port))
-        server_socket.listen()
-        server_socket.setblocking(False)
-
-        return server_socket
+    def start_serving(self):
+        self._loop.start_serving(self.protocol_factory, self.socket)

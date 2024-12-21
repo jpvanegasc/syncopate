@@ -1,5 +1,6 @@
 import logging
 import selectors
+import socket
 
 from syncopate.core.server import HTTPServer, Reader, Writer
 
@@ -15,9 +16,17 @@ class EventLoop:
         self.selector = selectors.DefaultSelector()
         self.stopped = False
 
-    def create_server(self, host, port, callback):
-        server = HTTPServer(host, port, callback)
+    def create_server(self, protocol_factory, host, port):
+        server_socket = socket.socket()
+        server_socket.bind((host, port))
+        server_socket.listen()
+        server_socket.setblocking(False)
 
+        server = HTTPServer(self, server_socket, protocol_factory)
+        server.start_serving()
+        return server
+
+    def start_serving(self, protocol_factory, sock):
         def connect(conn):
             try:
                 reader = Reader(conn)
@@ -25,7 +34,7 @@ class EventLoop:
                 self.selector.unregister(conn)
                 conn.close()
                 return
-            callback(reader, Writer(conn))
+            protocol_factory(reader, Writer(conn))
 
         def accept(sock):
             conn, addr = sock.accept()
@@ -33,7 +42,7 @@ class EventLoop:
             conn.setblocking(False)
             self.selector.register(conn, selectors.EVENT_READ, connect)
 
-        self.selector.register(server.socket, selectors.EVENT_READ, accept)
+        self.selector.register(sock, selectors.EVENT_READ, accept)
 
     def run_forever(self):
         while not self.stopped:
