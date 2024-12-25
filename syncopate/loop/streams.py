@@ -18,14 +18,3 @@ class Writer:
 
     def write(self, data):
         return self.conn.sendall(data)
-
-
-class HTTPServer:
-
-    def __init__(self, loop, socket, protocol_factory):
-        self._loop = loop
-        self.socket = socket
-        self.protocol_factory = protocol_factory
-
-    def start_serving(self):
-        self._loop.start_serving(self.protocol_factory, self.socket)

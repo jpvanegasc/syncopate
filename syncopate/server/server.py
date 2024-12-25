@@ -1,6 +1,6 @@
 import logging
 
-from syncopate.core import EventLoop
+from syncopate.loop import EventLoop
 
 logging.basicConfig(
     level=logging.INFO,

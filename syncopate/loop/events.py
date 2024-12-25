@@ -2,13 +2,24 @@ import logging
 import selectors
 import socket
 
-from syncopate.core.server import HTTPServer, Reader, Writer
+from syncopate.loop.streams import Reader, Writer
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+class HTTPServer:
+
+    def __init__(self, loop, sock, protocol_factory):
+        self._loop = loop
+        self.socket = sock
+        self.protocol_factory = protocol_factory
+
+    def start_serving(self):
+        self._loop.start_serving(self.protocol_factory, self.socket)
 
 
 class EventLoop:
