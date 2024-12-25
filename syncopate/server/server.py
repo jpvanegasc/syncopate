@@ -1,6 +1,7 @@
 import logging
 
 from syncopate.loop import EventLoop
+from syncopate.server.protocol import Protocol
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,7 +52,7 @@ class Server:
 
     def serve(self):
         loop = EventLoop()
-        loop.create_server(self.handle_client, self.host, self.port)
+        loop.create_server(lambda: Protocol(), self.host, self.port)
         logger.info("Server listening on %s:%s", self.host, self.port)
 
         loop.run_forever()
