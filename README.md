@@ -17,4 +17,4 @@ From the root of the project run
 ```shell
 make run
 ```
-This will start the syncopate server on [http://localhost:8888].
+This will start the syncopate server on [http://localhost:8888](http://localhost:8888).
