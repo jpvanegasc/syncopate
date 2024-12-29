@@ -27,6 +27,7 @@ class Transport:
         protocol.connection_made(self)
 
     def read(self):
+        # TODO: handle without error
         data = self.conn.recv(1024)
         if not data:
             self.protocol.connection_lost(None)
@@ -60,7 +61,8 @@ class EventLoop:
             try:
                 data = transport.read()
                 return protocol.data_received(data)
-            except EOFError:
+            except Exception:
+                logger.exception("Failed processing request, closing connection")
                 self.selector.unregister(conn)
                 conn.close()
 
