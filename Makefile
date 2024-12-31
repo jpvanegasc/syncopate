@@ -18,7 +18,7 @@ envsetup: $(VENV_DIR)
 	$(VENV_RUN) pre-commit install
 
 run: $(VENV_DIR) ## Run the application
-	$(VENV_RUN) PYTHONPATH=. python3 syncopate/main.py
+	$(VENV_RUN) PYTHONPATH=. python3 examples/full.py
 
 lint: $(VENV_DIR) ## Run linters via pre-commit
 	$(VENV_RUN) pre-commit run --all-files
