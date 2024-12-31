@@ -41,15 +41,14 @@ class Protocol(asyncio.Protocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        logger.info(f"Connection made {transport=}")
+        logger.debug(f"Connection made {transport=}")
 
     def data_received(self, data):
         method, path, headers = self.parse_http_request(data.decode())
         logger.info(
-            "Received %s request for %s, headers: %s",
+            "Received %s request for '%s'",
             method,
             path,
-            headers,
         )
         # TODO create task in the event loop
         self.app(

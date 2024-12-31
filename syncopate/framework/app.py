@@ -13,6 +13,6 @@ class Syncopate:
         assert scope["type"] == "http"
 
         data = receive()
-        logger.info("Received data: %s", data)
+        logger.debug("Received data %s", data)
 
         send("<h1>Hello, world!</h1>")
