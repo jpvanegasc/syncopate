@@ -1,11 +1,10 @@
 import logging
 
+import syncopate
 from syncopate.framework import Syncopate
-from syncopate.server import Server
 
-logger = logging.getLogger("syncopate")
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     app = Syncopate()
-    server = Server(app, "localhost", 8888)
-    server.serve()
+    syncopate.run(app)
