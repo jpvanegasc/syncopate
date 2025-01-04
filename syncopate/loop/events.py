@@ -27,15 +27,25 @@ class Transport:
         protocol.connection_made(self)
 
     def read(self):
-        # TODO: handle without error
+        if self.conn is None:
+            raise RuntimeError("Connection is closed")
+
         data = self.conn.recv(1024)
         if not data:
-            self.protocol.connection_lost(None)
-            raise EOFError("Connection closed")
+            self.close()
+            return
         return data
 
     def write(self, data):
         return self.conn.sendall(data)
+
+    def close(self):
+        if not self.conn:
+            return
+        self.conn.shutdown(socket.SHUT_WR)
+        self.conn.close()
+        self.conn = None
+        self.protocol.connection_lost(None)
 
 
 class EventLoop:
@@ -58,13 +68,11 @@ class EventLoop:
 
         def connect(conn):
             transport = Transport(protocol, conn)
-            try:
-                data = transport.read()
-                return protocol.data_received(data)
-            except Exception:
-                logger.exception("Failed processing request, closing connection")
+            data = transport.read()
+            if data is None:
                 self.selector.unregister(conn)
-                conn.close()
+                return
+            return protocol.data_received(data)
 
         def accept(sock):
             conn, addr = sock.accept()
