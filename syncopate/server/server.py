@@ -15,13 +15,14 @@ class Server:
         self.app = app
         self.host = host
         self.port = port
+        # TODO: create helper function to avoid instantiating EventLoop here
+        self.loop = EventLoop()
 
     def serve(self):
         def protocol_factory():
-            return Protocol(self.app)
+            return Protocol(self.app, self.loop)
 
-        loop = EventLoop()
-        loop.create_server(protocol_factory, self.host, self.port)
+        self.loop.create_server(protocol_factory, self.host, self.port)
         logger.info("Server listening on %s:%s", self.host, self.port)
 
-        loop.run_forever()
+        self.loop.run_forever()

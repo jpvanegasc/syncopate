@@ -1,6 +1,9 @@
 import logging
 import selectors
 import socket
+from collections import deque
+
+from syncopate.loop.tasks import Task
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,6 +55,7 @@ class EventLoop:
     def __init__(self):
         self.selector = selectors.DefaultSelector()
         self.stopped = False
+        self.tasks = deque()
 
     def create_server(self, protocol_factory, host, port):
         server_socket = socket.socket()
@@ -84,7 +88,21 @@ class EventLoop:
 
     def run_forever(self):
         while not self.stopped:
+
+            while self.tasks:
+                task = self.tasks.popleft()
+                try:
+                    task.step()
+                except StopIteration:
+                    pass
+
             events = self.selector.select()
             for key, _mask in events:
                 callback = key.data
                 callback(key.fileobj)
+
+    def create_task(self, coro):
+        # TODO: improve
+        task = Task(coro)
+        self.tasks.append(task)
+        return task

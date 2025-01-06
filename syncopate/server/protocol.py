@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 logging.basicConfig(
@@ -8,10 +7,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class Protocol(asyncio.Protocol):
-    def __init__(self, app):
+class Protocol:
+    def __init__(self, app, loop):
         self.transport = None
         self.app = app
+        self.loop = loop
 
     @staticmethod
     def parse_http_request(request_text):
@@ -50,11 +50,12 @@ class Protocol(asyncio.Protocol):
             method,
             path,
         )
-        # TODO create task in the event loop
-        self.app(
-            {"type": "http", "method": method, "path": path, "headers": headers},
-            self.receive,
-            self.send,
+        self.loop.create_task(
+            self.app(
+                {"type": "http", "method": method, "path": path, "headers": headers},
+                self.receive,
+                self.send,
+            )
         )
 
     def receive(self):

@@ -8,8 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Syncopate:
-    # TODO: make async
-    def __call__(self, scope, receive, send):
+    async def __call__(self, scope, receive, send):
         assert scope["type"] == "http"
 
         data = receive()
