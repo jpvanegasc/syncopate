@@ -25,4 +25,11 @@ class Server:
         self.loop.create_server(protocol_factory, self.host, self.port)
         logger.info("Server listening on %s:%s", self.host, self.port)
 
-        self.loop.run_forever()
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            logger.info("Server shutting down...")
+        finally:
+            # TODO: add shutdown_asyncgens method to EventLoop
+            self.loop.close()
+            logger.info("Server closed")

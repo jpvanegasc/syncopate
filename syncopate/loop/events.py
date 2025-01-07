@@ -106,3 +106,12 @@ class EventLoop:
 
     def all_tasks(self):
         return self.tasks
+
+    def close(self):
+        if self.stopped:
+            return
+        self.stopped = True
+        self.selector.close()
+        for task in self.tasks:
+            task.cancel()
+        self.tasks.clear()
