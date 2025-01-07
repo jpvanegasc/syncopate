@@ -26,5 +26,6 @@ class Syncopate:
         if handler is None:
             send("<h1>404 Not Found</h1>", status_code=404, status_message="Not Found")
 
-        response = handler(scope, receive)
-        await send(response)
+        # TODO: pass arguments to handler
+        response = handler()
+        send(response)
