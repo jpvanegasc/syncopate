@@ -29,13 +29,14 @@ class Task:
         try:
             self._result = self.coro.send(self._result)
         except StopIteration as e:
+            # TODO: check if this is correct
             self._result = e.value
             self._done = True
+            for callback in self.callbacks:
+                callback(self)
         except Exception as e:
             self._exception = e
             self._done = True
-        for callback in self.callbacks:
-            callback(self)
 
     def done(self):
         return self._done
