@@ -7,7 +7,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class Protocol:
+class HTTPProtocol:
     def __init__(self, app, loop):
         self.transport = None
         self.app = app

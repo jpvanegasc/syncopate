@@ -1,1 +1,1 @@
-from syncopate.server.server import Server  # noqa: F401
+from syncopate.server.server import HTTPServer  # noqa: F401

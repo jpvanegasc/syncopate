@@ -1,4 +1,4 @@
-from syncopate.server import Server
+from syncopate.server import HTTPServer
 
 
 def run(app, host=None, port=None):
@@ -7,5 +7,5 @@ def run(app, host=None, port=None):
     if port is None:
         port = 8888
 
-    server = Server(app, host, port)
+    server = HTTPServer(app, host, port)
     server.serve()

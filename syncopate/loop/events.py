@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class HTTPServer:
+class Server:
 
     def __init__(self, loop, sock, protocol_factory):
         self._loop = loop
@@ -63,7 +63,7 @@ class EventLoop:
         server_socket.listen()
         server_socket.setblocking(False)
 
-        server = HTTPServer(self, server_socket, protocol_factory)
+        server = Server(self, server_socket, protocol_factory)
         server.start_serving()
         return server
 
