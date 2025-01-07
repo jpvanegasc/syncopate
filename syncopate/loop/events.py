@@ -23,7 +23,7 @@ class Server:
         self._loop.start_serving(self.protocol_factory, self.socket)
 
     def close(self):
-        # TODO: call on loop shutdown
+        # TODO: call on loop shutdown?
         self.socket.close()
 
 
@@ -66,6 +66,7 @@ class EventLoop:
 
     def create_server(self, protocol_factory, host, port):
         server_socket = socket.socket()
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((host, port))
         server_socket.listen()
         server_socket.setblocking(False)

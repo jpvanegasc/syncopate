@@ -22,7 +22,7 @@ class HTTPServer:
         def protocol_factory():
             return HTTPProtocol(self.app, self.loop)
 
-        self.loop.create_server(protocol_factory, self.host, self.port)
+        server = self.loop.create_server(protocol_factory, self.host, self.port)
         logger.info("Server listening on %s:%s", self.host, self.port)
 
         try:
@@ -32,6 +32,7 @@ class HTTPServer:
         except Exception:
             logger.exception("Error running server")
         finally:
+            server.close()
             # TODO: add shutdown_asyncgens method to EventLoop
             self.loop.close()
             logger.info("Server closed")
