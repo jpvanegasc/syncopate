@@ -29,6 +29,8 @@ class HTTPServer:
             self.loop.run_forever()
         except KeyboardInterrupt:
             logger.info("Server shutting down...")
+        except Exception:
+            logger.exception("Error running server")
         finally:
             # TODO: add shutdown_asyncgens method to EventLoop
             self.loop.close()
