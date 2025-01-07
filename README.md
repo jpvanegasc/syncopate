@@ -3,7 +3,7 @@ Syncopate is an experimental ASGI framework that thrives on the polyrhythmic mag
 
 ### 📖 Table of Contents
 - ⚒ [Env Setup and Development](#-env-setup-and-development)
-- ⚙ [Running Locally](#-running-locally)
+- ⚙ [Running Syncopate](#-running-syncopate)
 
 ## ⚒ Env Setup and Development
 To set up your local environment run
@@ -12,9 +12,22 @@ make envsetup
 ```
 This will create a virtual environment for the project and install the pre-commit hooks. Syncopate doesn't have any requirements, it does everything itself!
 
-## Running Locally
-From the root of the project run
-```shell
-make run
+## ⚙ Running Syncopate
+Build an ASGI app:
+```python
+from syncopate.framework import Syncopate
+
+app = Syncopate()
+
+
+@app.route("/")
+def index():
+    return "<h1>Hello, World!</h1>"
 ```
-This will start the syncopate server on [http://localhost:8888](http://localhost:8888).
+and run it:
+```python
+import syncopate
+
+syncopate.run(app, host="localhost", port=8888)
+```
+This will start the syncopate server and run the app on [http://localhost:8888](http://localhost:8888).
