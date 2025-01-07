@@ -91,10 +91,7 @@ class EventLoop:
 
             while self.tasks:
                 task = self.tasks.popleft()
-                try:
-                    task.step()
-                except StopIteration:
-                    pass
+                task.step()
 
             events = self.selector.select()
             for key, _mask in events:

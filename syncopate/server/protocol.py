@@ -59,11 +59,7 @@ class Protocol:
         )
 
     def receive(self):
-        try:
-            return self.transport.read()
-        except EOFError:
-            self.connection_lost(None)
-        return b""
+        return self.transport.read()
 
     def send(self, data):
         response = self.build_http_response(data)
