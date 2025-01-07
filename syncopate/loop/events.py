@@ -22,22 +22,29 @@ class Server:
     def start_serving(self):
         self._loop.start_serving(self.protocol_factory, self.socket)
 
+    def close(self):
+        # TODO: call on loop shutdown
+        self.socket.close()
+
 
 class Transport:
     def __init__(self, protocol, conn):
         self.protocol = protocol
         self.conn = conn
+        self.buffer = b""
         protocol.connection_made(self)
 
     def read(self):
         if self.conn is None:
             raise RuntimeError("Connection is closed")
-
         data = self.conn.recv(1024)
         if not data:
             self.close()
             return
-        return data
+
+        self.buffer += data
+        self.protocol.data_received(self.buffer)
+        self.buffer = b""
 
     def write(self, data):
         return self.conn.sendall(data)
@@ -72,11 +79,7 @@ class EventLoop:
 
         def connect(conn):
             transport = Transport(protocol, conn)
-            data = transport.read()
-            if data is None:
-                self.selector.unregister(conn)
-                return
-            return protocol.data_received(data)
+            transport.read()
 
         def accept(sock):
             conn, addr = sock.accept()
