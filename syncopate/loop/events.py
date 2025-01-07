@@ -101,8 +101,11 @@ class EventLoop:
                 callback = key.data
                 callback(key.fileobj)
 
-    def create_task(self, coro):
+    def create_task(self, coro, *, name=None):
         # TODO: improve
-        task = Task(coro)
+        task = Task(coro, name=name)
         self.tasks.append(task)
         return task
+
+    def all_tasks(self):
+        return self.tasks
