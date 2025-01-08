@@ -5,6 +5,7 @@ from collections import deque
 
 from syncopate.loop.tasks import Task
 
+# TODO: add non-blocking handler
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s: %(message)s",
