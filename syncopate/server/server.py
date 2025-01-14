@@ -1,13 +1,6 @@
-import logging
-
+from syncopate.logging import logger
 from syncopate.loop import EventLoop
 from syncopate.server.protocol import HTTPProtocol
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s:%(name)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 
 class HTTPServer:

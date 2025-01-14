@@ -1,10 +1,4 @@
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s:%(name)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
+from syncopate.logging import logger
 
 
 class HTTPProtocol:
@@ -46,7 +40,6 @@ class HTTPProtocol:
 
     def connection_made(self, transport):
         self.transport = transport
-        logger.debug(f"Connection made {transport=}")
 
     def data_received(self, data):
         self.buffer += data
@@ -87,4 +80,4 @@ class HTTPProtocol:
         self.transport.write(response)
 
     def connection_lost(self, exc):
-        logger.info("Connection lost")
+        logger.debug("Connection lost")

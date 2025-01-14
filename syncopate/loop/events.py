@@ -1,16 +1,9 @@
-import logging
 import selectors
 import socket
 from collections import deque
 
+from syncopate.logging import logger
 from syncopate.loop.tasks import Task
-
-# TODO: add non-blocking handler
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s:%(name)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 
 class Server:
@@ -101,7 +94,7 @@ class EventLoop:
 
         def accept(sock):
             conn, addr = sock.accept()
-            logger.info("Connection from %s", addr)
+            logger.debug("Connection from %s", addr)
             conn.setblocking(False)
             transport = Transport(self, protocol, conn)
             self._add_reader(conn, transport.read)
