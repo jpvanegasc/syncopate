@@ -29,10 +29,12 @@ class Server:
 
 
 class Transport:
-    def __init__(self, protocol, conn):
+    def __init__(self, loop, protocol, conn):
         self.protocol = protocol
         self.conn = conn
+        self.loop = loop
         self.read_buffer = b""
+        self.write_buffer = b""
         protocol.connection_made(self)
 
     def read(self, *args):
@@ -53,7 +55,20 @@ class Transport:
         self.read_buffer = b""
 
     def write(self, data):
-        return self.conn.sendall(data)
+        if not self.conn:
+            raise RuntimeError("Connection is closed")
+        self.write_buffer += data
+        self.loop._add_writer(self.conn, self._handle_write)
+
+    def _handle_write(self, *args):
+        if self.write_buffer:
+            try:
+                sent = self.conn.send(self.write_buffer)
+                self.write_buffer = self.write_buffer[sent:]
+            except BlockingIOError:
+                pass
+        if not self.write_buffer:
+            self.loop._add_reader(self.conn, self.read)
 
     def close(self):
         if not self.conn:
@@ -88,13 +103,32 @@ class EventLoop:
             conn, addr = sock.accept()
             logger.info("Connection from %s", addr)
             conn.setblocking(False)
-            transport = Transport(protocol, conn)
+            transport = Transport(self, protocol, conn)
             self._add_reader(conn, transport.read)
 
         self._add_reader(sock, accept)
 
     def _add_reader(self, fd, callback):
-        self.selector.register(fd, selectors.EVENT_READ, callback)
+        """
+        Register a file descriptor to be monitored for read events.If the fd is already
+        registered, modify the event mask to include read events.
+        """
+        key = self.selector.get_map().get(fd)
+        if not key:
+            self.selector.register(fd, selectors.EVENT_READ, callback)
+        else:
+            self.selector.modify(fd, selectors.EVENT_READ, callback)
+
+    def _add_writer(self, fd, callback):
+        """
+        Register a file descriptor to be monitored for write events. If the fd is
+        already registered, modify the event mask to include write events.
+        """
+        key = self.selector.get_map().get(fd)
+        if not key:
+            self.selector.register(fd, selectors.EVENT_WRITE, callback)
+        else:
+            self.selector.modify(fd, selectors.EVENT_WRITE, callback)
 
     def run_forever(self):
         while not self.stopped:
