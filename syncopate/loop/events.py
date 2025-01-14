@@ -128,7 +128,13 @@ class EventLoop:
 
             while self.tasks:
                 task = self.tasks.popleft()
+                # TODO: validate
                 task.step()
+                if not task.done():
+                    self.tasks.append(task)
+                else:
+                    if (exc := task.exception()) is not None:
+                        raise exc
 
             events = self.selector.select()
             for key, _mask in events:
