@@ -32,20 +32,25 @@ class Transport:
     def __init__(self, protocol, conn):
         self.protocol = protocol
         self.conn = conn
-        self.buffer = b""
+        self.read_buffer = b""
         protocol.connection_made(self)
 
-    def read(self):
+    def read(self, *args):
         if self.conn is None:
             raise RuntimeError("Connection is closed")
-        data = self.conn.recv(1024)
+
+        try:
+            data = self.conn.recv(1024)
+        except BlockingIOError:
+            return
+
         if not data:
             self.close()
             return
 
-        self.buffer += data
-        self.protocol.data_received(self.buffer)
-        self.buffer = b""
+        self.read_buffer += data
+        self.protocol.data_received(self.read_buffer)
+        self.read_buffer = b""
 
     def write(self, data):
         return self.conn.sendall(data)
@@ -79,17 +84,17 @@ class EventLoop:
     def start_serving(self, protocol_factory, sock):
         protocol = protocol_factory()
 
-        def connect(conn):
-            transport = Transport(protocol, conn)
-            transport.read()
-
         def accept(sock):
             conn, addr = sock.accept()
             logger.info("Connection from %s", addr)
             conn.setblocking(False)
-            self.selector.register(conn, selectors.EVENT_READ, connect)
+            transport = Transport(protocol, conn)
+            self._add_reader(conn, transport.read)
 
-        self.selector.register(sock, selectors.EVENT_READ, accept)
+        self._add_reader(sock, accept)
+
+    def _add_reader(self, fd, callback):
+        self.selector.register(fd, selectors.EVENT_READ, callback)
 
     def run_forever(self):
         while not self.stopped:
