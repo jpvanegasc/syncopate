@@ -1,8 +1,11 @@
+import sniffio
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 import syncopate
+
+sniffio.current_async_library_cvar.set("asyncio")
 
 
 async def homepage(request):
