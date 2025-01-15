@@ -20,6 +20,12 @@ envsetup: $(VENV_DIR)
 run: $(VENV_DIR) ## Run the application
 	$(VENV_RUN) PYTHONPATH=. python3 examples/full.py
 
+run_starlette: $(VENV_DIR) ## Run the application
+	$(VENV_RUN) PYTHONPATH=. python3 examples/starlette_example.py
+
+run_fastapi: $(VENV_DIR) ## Run the application
+	$(VENV_RUN) PYTHONPATH=. python3 examples/fastapi_example.py
+
 lint: $(VENV_DIR) ## Run linters via pre-commit
 	$(VENV_RUN) pre-commit run --all-files
 
