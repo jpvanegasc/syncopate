@@ -1,4 +1,7 @@
+import json
+
 from syncopate.logging import logger
+from syncopate.server.helpers import STATUS_PHRASES
 
 
 class HTTPProtocol:
@@ -9,6 +12,9 @@ class HTTPProtocol:
         self.buffer = b""
         self.headers_parsed = False
         self.content_length = None
+        self.response_started = False
+        self.response_complete = False
+        self.headers = []
 
     def parse_http_headers(self, request_text):
         lines = request_text.split("\r\n")
@@ -26,17 +32,6 @@ class HTTPProtocol:
                 self.content_length = int(value)
         self.headers_parsed = True
         return method, path, headers
-
-    @staticmethod
-    def build_http_response(*, body, status_code, status_message):
-        response_lines = [
-            f"HTTP/1.1 {status_code} {status_message}",
-            "Content-Type: text/html",
-            f"Content-Length: {len(body)}",
-            "",
-            body,
-        ]
-        return "\r\n".join(response_lines).encode()
 
     def connection_made(self, transport):
         self.transport = transport
@@ -69,15 +64,57 @@ class HTTPProtocol:
         }
 
         self.loop.create_task(self.app(scope, self.receive, self.send))
+        self.headers_parsed = False
 
+    # TODO: make async
     def receive(self):
         return self.transport.read()
 
-    def send(self, data, status_code=200, status_message="OK"):
-        response = self.build_http_response(
-            body=data, status_code=status_code, status_message=status_message
-        )
-        self.transport.write(response)
+    # TODO: make async
+    def send(self, data):
+
+        if not self.response_started:
+            self.headers = data.get("headers", [])
+            status = data.get("status", 200)
+            status_phrase = STATUS_PHRASES.get(status, "")
+            response = [f"HTTP/1.1 {status} {status_phrase}"] + [
+                f"{k}: {v}" for k, v in self.headers
+            ]
+
+            self.transport.write("\r\n".join(response).encode() + b"\r\n\r\n")
+            self.response_started = True
+
+        elif not self.response_complete:
+            body = data.get("body", b"")
+            more_body = data.get("more_body", False)
+
+            if isinstance(body, str):
+                body = body.encode()
+            elif isinstance(body, dict):
+                body = json.dumps(body).encode()
+            elif not isinstance(body, bytes):
+                raise ValueError(f"Invalid body type: {type(body)}")
+
+            self.transport.write(body)
+
+            if not more_body:
+                self.response_complete = True
+                if self.should_close():
+                    self.transport.close()
+
+                self.response_started = self.response_complete = False
+                return
+
+        else:
+            raise RuntimeError("Response already complete")
+
+    def should_close(self):
+        connection = dict(self.headers).get("Connection", "")
+        if connection.lower() == "close":
+            return True
+        elif connection.lower() == "keep-alive":
+            return False
+        return False
 
     def connection_lost(self, exc):
         logger.debug("Connection lost")

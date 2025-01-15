@@ -15,8 +15,26 @@ class Syncopate:
         path = scope["path"]
         handler = self.routes.get(path)
         if handler is None:
-            send("<h1>404 Not Found</h1>", status_code=404, status_message="Not Found")
+            msg = b"<h1>Not Found</h1>"
+            send(
+                {
+                    "type": "http.response.start",
+                    "status": 404,
+                    "status_message": "Not Found",
+                    "headers": [("Content-Length", len(msg))],
+                }
+            )
+
+            send({"type": "http.response.body", "body": msg, "more_body": False})
+            return
 
         # TODO: pass arguments to handler
         response = handler()
-        send(response)
+        send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [("Content-Length", len(response))],
+            }
+        )
+        send({"type": "http.response.body", "body": response, "more_body": False})
