@@ -1,7 +1,7 @@
 import json
 
 from syncopate.logging import logger
-from syncopate.server.helpers import STATUS_PHRASES
+from syncopate.server.response import ResponseHead
 
 
 class HTTPProtocol:
@@ -74,14 +74,10 @@ class HTTPProtocol:
     async def send(self, data):
 
         if not self.response_started:
-            self.headers = data.get("headers", [])
-            status = data.get("status", 200)
-            status_phrase = STATUS_PHRASES.get(status, "")
-            response = [f"HTTP/1.1 {status} {status_phrase}"] + [
-                f"{k}: {v}" for k, v in self.headers
-            ]
-
-            self.transport.write("\r\n".join(response).encode() + b"\r\n\r\n")
+            response_head = ResponseHead(
+                data.get("status", 200), data.get("headers", [])
+            )
+            self.transport.write(response_head.get_response())
             self.response_started = True
 
         elif not self.response_complete:
