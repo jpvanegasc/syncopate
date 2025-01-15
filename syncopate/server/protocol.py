@@ -67,11 +67,11 @@ class HTTPProtocol:
         self.headers_parsed = False
 
     # TODO: make async
-    def receive(self):
+    async def receive(self):
         return self.transport.read()
 
     # TODO: make async
-    def send(self, data):
+    async def send(self, data):
 
         if not self.response_started:
             self.headers = data.get("headers", [])

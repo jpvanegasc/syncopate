@@ -16,7 +16,7 @@ class Syncopate:
         handler = self.routes.get(path)
         if handler is None:
             msg = b"<h1>Not Found</h1>"
-            send(
+            await send(
                 {
                     "type": "http.response.start",
                     "status": 404,
@@ -25,16 +25,16 @@ class Syncopate:
                 }
             )
 
-            send({"type": "http.response.body", "body": msg, "more_body": False})
+            await send({"type": "http.response.body", "body": msg, "more_body": False})
             return
 
         # TODO: pass arguments to handler
         response = handler()
-        send(
+        await send(
             {
                 "type": "http.response.start",
                 "status": 200,
                 "headers": [("Content-Length", len(response))],
             }
         )
-        send({"type": "http.response.body", "body": response, "more_body": False})
+        await send({"type": "http.response.body", "body": response, "more_body": False})
