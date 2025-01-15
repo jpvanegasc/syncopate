@@ -80,3 +80,5 @@ class Task:
 
     def get_name(self):
         return self.name
+
+    # TODO: implement __await__ method
