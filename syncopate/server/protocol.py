@@ -1,7 +1,5 @@
-import json
-
 from syncopate.logging import logger
-from syncopate.server.common import ResponseHead
+from syncopate.server.common import ResponseBody, ResponseStart, Scope
 
 
 class HTTPProtocol:
@@ -55,13 +53,15 @@ class HTTPProtocol:
             self.handle_request(method, path, headers, None)
 
     def handle_request(self, method, path, headers, body):
-        scope = {
-            "type": "http",
-            "path": path,
-            "method": method,
-            "headers": headers,
-            "body": body,
-        }
+        scope = Scope(
+            {
+                "type": "http",
+                "path": path,
+                "method": method,
+                "headers": headers,
+                "body": body,
+            }
+        )
 
         self.loop.create_task(self.app(scope, self.receive, self.send))
         self.headers_parsed = False
@@ -72,28 +72,18 @@ class HTTPProtocol:
 
     # TODO: make async
     async def send(self, data):
-
         if not self.response_started:
-            response_head = ResponseHead(
+            response_head = ResponseStart(
                 data.get("status", 200), data.get("headers", [])
             )
             self.transport.write(response_head.get_response())
             self.response_started = True
 
         elif not self.response_complete:
-            body = data.get("body", b"")
-            more_body = data.get("more_body", False)
+            response_body = ResponseBody(body=data.get("body", b""))
+            self.transport.write(response_body.get_response())
 
-            if isinstance(body, str):
-                body = body.encode()
-            elif isinstance(body, dict):
-                body = json.dumps(body).encode()
-            elif not isinstance(body, bytes):
-                raise ValueError(f"Invalid body type: {type(body)}")
-
-            self.transport.write(body)
-
-            if not more_body:
+            if not data.get("more_body", False):
                 self.response_complete = True
                 if self.should_close():
                     self.transport.close()
