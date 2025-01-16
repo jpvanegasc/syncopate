@@ -1,7 +1,7 @@
 import json
 
 from syncopate.logging import logger
-from syncopate.server.response import ResponseHead
+from syncopate.server.common import ResponseHead
 
 
 class HTTPProtocol:
