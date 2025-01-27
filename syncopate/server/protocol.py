@@ -1,5 +1,17 @@
+from typing import cast
+
 from syncopate.logging import logger
-from syncopate.server.common import ResponseBody, ResponseStart, Scope
+from syncopate.server.common import (
+    ASGIReceiveEvent,
+    ASGISendEvent,
+    ASGIVersions,
+    HTTPResponseBodyEvent,
+    HTTPResponseStartEvent,
+    Request,
+    ResponseBody,
+    ResponseStart,
+    Scope,
+)
 
 
 class HTTPProtocol:
@@ -14,76 +26,77 @@ class HTTPProtocol:
         self.response_complete = False
         self.headers = []
 
-    def parse_http_headers(self, request_text):
-        lines = request_text.split("\r\n")
-        method, path, request_type = lines[0].split(" ", 2)
-
-        assert "http" in request_type.lower(), f"Invalid request: {request_text}"
-
-        headers = {}
-        for line in lines[1:]:
-            if not line.strip():
-                break
-            key, value = line.split(":", 1)
-            headers[key.strip()] = value.strip()
-            if key.lower() == "content-length":
-                self.content_length = int(value)
-        self.headers_parsed = True
-        return method, path, headers
-
     def connection_made(self, transport):
         self.transport = transport
 
     def data_received(self, data):
         self.buffer += data
 
-        method = path = headers = None
         if not self.headers_parsed:
             if b"\r\n\r\n" in self.buffer:
-                headers, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
-                method, path, headers = self.parse_http_headers(headers.decode())
+                request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
+                self.handle_request(Request.from_bytes(request_bytes))
 
-        if self.headers_parsed and self.content_length is not None:
-            if len(self.buffer) >= self.content_length:
-                body = self.buffer[: self.content_length]
-                self.handle_request(method, path, headers, body)
-                self.buffer = self.buffer[self.content_length :]
-                self.content_length = None
-        elif self.headers_parsed:
-            self.handle_request(method, path, headers, None)
-
-    def handle_request(self, method, path, headers, body):
+    def handle_request(self, request: Request):
         scope = Scope(
-            {
-                "type": "http",
-                "path": path,
-                "method": method,
-                "headers": headers,
-                "body": body,
-            }
+            type="http",
+            asgi=ASGIVersions(spec_version="2.0", version="3.0"),
+            http_version="1.1",
+            method=request.method,
+            scheme="http",  # TODO
+            path=request.path,
+            raw_path=request.path.encode(),  # TODO
+            query_string=b"",  # TODO
+            root_path="",  # TODO
+            headers=request.headers,
+            client=None,
+            server=None,
         )
 
         self.loop.create_task(self.app(scope, self.receive, self.send))
         self.headers_parsed = False
 
-    # TODO: make async
-    async def receive(self):
-        return self.transport.read()
+    # TODO: test
+    async def receive(self) -> ASGIReceiveEvent:
 
-    # TODO: make async
-    async def send(self, data):
-        if not self.response_started:
-            response_head = ResponseStart(
-                data.get("status", 200), data.get("headers", [])
+        if not self.content_length:
+            return ASGIReceiveEvent(
+                type="http.request",
+                body=b"",
+                more_body=False,
             )
+
+        more_body = True
+        body = self.buffer
+
+        if len(self.buffer) >= self.content_length:
+            body = self.buffer[: self.content_length]
+            self.buffer = self.buffer[self.content_length :]
+            more_body = False
+
+        return ASGIReceiveEvent(
+            type="http.request",
+            body=body,
+            more_body=more_body,
+        )
+
+    async def send(self, message: ASGISendEvent) -> None:
+        message_type = message["type"]
+        if not self.response_started:
+            if message_type != "http.response.start":
+                raise RuntimeError("Response not started")
+
+            message = cast("HTTPResponseStartEvent", message)
+            response_head = ResponseStart(message["status"], message["headers"])
             self.transport.write(response_head.get_response())
             self.response_started = True
 
         elif not self.response_complete:
-            response_body = ResponseBody(body=data.get("body", b""))
+            message = cast("HTTPResponseBodyEvent", message)
+            response_body = ResponseBody(body=message["body"])
             self.transport.write(response_body.get_response())
 
-            if not data.get("more_body", False):
+            if not message.get("more_body", False):
                 self.response_complete = True
                 if self.should_close():
                     self.transport.close()
