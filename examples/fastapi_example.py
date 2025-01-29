@@ -14,5 +14,10 @@ def read_root():
     return {"hello": "world"}
 
 
+@app.post("/echo")
+async def echo(data: dict):
+    return data
+
+
 if __name__ == "__main__":
     syncopate.run(app)
