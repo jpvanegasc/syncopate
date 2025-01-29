@@ -20,7 +20,6 @@ class HTTPProtocol:
         self.app = app
         self.loop = loop
         self.buffer = b""
-        self.headers_parsed = False
         self.content_length = None
         self.response_started = False
         self.response_complete = False
@@ -32,10 +31,9 @@ class HTTPProtocol:
     def data_received(self, data):
         self.buffer += data
 
-        if not self.headers_parsed:
-            if b"\r\n\r\n" in self.buffer:
-                request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
-                self.handle_request(Request.from_bytes(request_bytes))
+        if b"\r\n\r\n" in self.buffer:
+            request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
+            self.handle_request(Request.from_bytes(request_bytes))
 
     def handle_request(self, request: Request):
         scope = Scope(
@@ -53,8 +51,8 @@ class HTTPProtocol:
             server=None,
         )
 
+        self.content_length = request.content_length
         self.loop.create_task(self.app(scope, self.receive, self.send))
-        self.headers_parsed = False
 
     # TODO: test
     async def receive(self) -> ASGIReceiveEvent:

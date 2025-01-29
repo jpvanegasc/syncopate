@@ -40,7 +40,7 @@ class Request:
                 break
             key, value = line.split(b":", 1)
             headers.append((key.strip(), value.strip()))
-            if key.lower() == "content-length":
+            if key.lower() == b"content-length":
                 content_length = int(value)
 
         return cls(method_bytes.decode(), path_bytes.decode(), headers, content_length)
