@@ -1,11 +1,14 @@
+from syncopate.framework.routing import Route
+
+
 class Syncopate:
     def __init__(self):
         self.routes = {}
 
     def route(self, path):
-        def decorator(view):
-            self.routes[path] = view
-            return view
+        def decorator(endpoint):
+            self.routes[path] = Route(path, endpoint)
+            return endpoint
 
         return decorator
 
@@ -28,13 +31,4 @@ class Syncopate:
             await send({"type": "http.response.body", "body": msg, "more_body": False})
             return
 
-        # TODO: pass arguments to handler
-        response = handler()
-        await send(
-            {
-                "type": "http.response.start",
-                "status": 200,
-                "headers": [("Content-Length", len(response))],
-            }
-        )
-        await send({"type": "http.response.body", "body": response, "more_body": False})
+        await handler(scope, receive, send)
