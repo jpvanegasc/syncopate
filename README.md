@@ -21,8 +21,8 @@ app = Syncopate()
 
 
 @app.route("/")
-def index():
-    return "<h1>Hello, World!</h1>"
+async def index(request):
+    return "Hello, World!"
 ```
 and run it:
 ```python
