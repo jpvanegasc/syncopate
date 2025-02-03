@@ -1,3 +1,5 @@
+import asyncio
+
 from syncopate.framework.requests import Request
 from syncopate.framework.responses import JSONResponse, Response
 
@@ -9,7 +11,13 @@ class Route:
 
     async def __call__(self, scope, receive, send):
         request = Request(scope, receive, send)
-        response = await self.endpoint(request)
+
+        if asyncio.iscoroutinefunction(self.endpoint):
+            response = await self.endpoint(request)
+        else:
+            # TODO: run in threadpool
+            response = self.endpoint(request)
+
         if not isinstance(response, Response):
             if isinstance(response, dict):
                 response = JSONResponse(response)

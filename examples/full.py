@@ -21,5 +21,12 @@ async def root(request):
     return HTMLResponse("<h1>Method Not Allowed</h1>", status=405)
 
 
+@app.route("/sync")
+def sync(request):
+    if request.scope["method"] != "GET":
+        return HTMLResponse("<h1>Method Not Allowed</h1>", status=405)
+    return HTMLResponse("<h1>Hello, World!</h1><p>Sync</p>")
+
+
 if __name__ == "__main__":
     syncopate.run(app)

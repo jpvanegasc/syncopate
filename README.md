@@ -23,6 +23,11 @@ app = Syncopate()
 @app.route("/")
 async def index(request):
     return "Hello, World!"
+
+
+@app.route("/api")
+def api(request):
+    return {"hello": "world"}
 ```
 and run it:
 ```python
