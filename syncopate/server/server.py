@@ -1,5 +1,5 @@
+from syncopate import loop
 from syncopate.logging import logger
-from syncopate.loop import EventLoop
 from syncopate.server.protocol import HTTPProtocol
 
 
@@ -8,8 +8,7 @@ class HTTPServer:
         self.app = app
         self.host = host
         self.port = port
-        # TODO: create helper function to avoid instantiating EventLoop here
-        self.loop = EventLoop()
+        self.loop = loop.get_event_loop()
 
     def serve(self):
         def protocol_factory():
