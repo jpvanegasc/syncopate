@@ -1,13 +1,23 @@
 import json
+from typing import Any, Optional
+
+from syncopate.framework.background import BackgroundTask, BackgroundTasks
 
 
 class Response:
     media_type = "text/plain"
 
-    def __init__(self, content=None, status=200, headers: dict | None = None):
+    def __init__(
+        self,
+        content: Any = None,
+        status: int = 200,
+        headers: dict | None = None,
+        background: Optional[BackgroundTask | BackgroundTasks] = None,
+    ):
         self.body = self.render(content)
         self.status = status
         self.headers = self.init_headers(headers)
+        self.background = background
 
     def init_headers(self, headers):
         if headers is None:
@@ -44,6 +54,9 @@ class Response:
             }
         )
         await send({"type": "http.response.body", "body": self.body})
+
+        if self.background is not None:
+            await self.background()
 
 
 class HTMLResponse(Response):
