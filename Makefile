@@ -13,8 +13,8 @@ $(VENV_DIR):
 
 envsetup: $(VENV_DIR)
 	$(VENV_RUN) pip install --upgrade pip
-	$(VENV_RUN) pip install -r requirements/dev.txt
-	$(VENV_RUN) pip install -r requirements/main.txt
+	$(VENV_RUN) pip install pre-commit
+	$(VENV_RUN) pre-commit autoupdate
 	$(VENV_RUN) pre-commit install
 
 run: $(VENV_DIR) ## Run the application
