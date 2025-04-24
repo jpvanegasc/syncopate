@@ -10,11 +10,13 @@ class MyThread(threading.Thread):
         self.queue = Queue()
         self.loop = asyncio.get_running_loop()
 
-    def report(fut, res, exc):
+    def report(self, fut, res, exc):
         if not fut.cancelled():
             if exc:
                 print(f"Setting {exc=}")
                 fut.set_exception(exc)
+            else:
+                fut.set_result(res)
 
     def run(self):
         while not self.queue.empty():
@@ -22,12 +24,13 @@ class MyThread(threading.Thread):
             if item is None:
                 return
             fut, func, args = item
+            res = None
+            exc = None
             try:
                 res = func(*args)
-                fut.set_result(res)
             except Exception as e:
-                print(repr(e))
-                fut.set_exception(e)
+                exc = e
+            self.loop.call_soon_threadsafe(self.report, fut, res, exc)
             self.queue.task_done()
         print("MyThread.run done")
 
