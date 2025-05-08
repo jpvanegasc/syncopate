@@ -7,7 +7,6 @@ from syncopate.loop.tasks import Task
 
 
 class Server:
-
     def __init__(self, loop, sock, protocol_factory):
         self._loop = loop
         self.socket = sock
@@ -125,16 +124,10 @@ class EventLoop:
 
     def run_forever(self):
         while not self.stopped:
-
             while self.tasks:
                 task = self.tasks.popleft()
-                # TODO: validate
-                task.step()
-                if not task.done():
-                    self.tasks.append(task)
-                else:
-                    if (exc := task.exception()) is not None:
-                        raise exc
+                # TODO: Improve task handling using a handler class within the loop
+                task()
 
             events = self.selector.select()
             for key, _mask in events:
@@ -142,9 +135,7 @@ class EventLoop:
                 callback(key.fileobj)
 
     def create_task(self, coro, *, name=None):
-        # TODO: improve
-        task = Task(coro, name=name)
-        self.tasks.append(task)
+        task = Task(coro, name=name, loop=self)
         return task
 
     def all_tasks(self):
@@ -158,3 +149,8 @@ class EventLoop:
         for task in self.tasks:
             task.cancel()
         self.tasks.clear()
+
+    def call_soon(self, callback):
+        # TODO: this is the way, remove from self.create_tasks
+        # This is done by the task itself on init: https://github.com/python/cpython/blob/1bc16504ef3866cc419f3781eef6528b93aee6b4/Lib/asyncio/tasks.py#L112
+        self.tasks.append(callback)

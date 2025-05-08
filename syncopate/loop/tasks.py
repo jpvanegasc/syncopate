@@ -1,5 +1,7 @@
 import asyncio
 
+import syncopate.loop as sync_loop
+
 
 class InvalidStateError(Exception):
     pass
@@ -10,7 +12,12 @@ class CancelledError(Exception):
 
 
 class Task:
-    def __init__(self, coro, *, name=None):
+    def __init__(self, coro, *, name=None, loop=None):
+        if loop is None:
+            self._loop = sync_loop.get_event_loop()
+        else:
+            self._loop = loop
+
         if not asyncio.iscoroutine(coro):
             raise TypeError("coro must be a coroutine object")
         self.coro = coro
@@ -20,6 +27,8 @@ class Task:
         self._cancelled = False
         self._exception = None
         self.callbacks = set()
+
+        self._loop.call_soon(self.step)
 
     def step(self):
         if self._done:
