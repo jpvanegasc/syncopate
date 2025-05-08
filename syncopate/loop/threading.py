@@ -13,7 +13,6 @@ class WorkerThread(threading.Thread):
     def report(self, fut, res, exc):
         if not fut.cancelled():
             if exc:
-                print(f"Setting {exc=}")
                 fut.set_exception(exc)
             else:
                 fut.set_result(res)
