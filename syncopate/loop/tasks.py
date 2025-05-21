@@ -23,29 +23,35 @@ class Task:
         self.coro = coro
         self.name = name or repr(coro)
         self._done = False
+        # TODO: this attrs should be handled by Future superclass
         self._result = None
         self._cancelled = False
         self._exception = None
         self.callbacks = set()
 
-        self._loop.call_soon(self.step)
+        self._loop.call_soon(self.__step)
 
-    def step(self):
+    def __step(self):
         if self._done:
             return
         if self._cancelled:
             return
         try:
-            self._result = self.coro.send(self._result)
+            result = self.coro.send(self._result)
         except StopIteration as e:
-            # TODO: check if this is correct
+            # TODO: Improve with Future
+            # When inheriting from future set with Future.set_result()
             self._result = e.value
             self._done = True
+
             for callback in self.callbacks:
-                callback(self)
+                self._loop.call_soon(callback, self)
         except Exception as e:
             self._exception = e
             self._done = True
+        else:
+            if result is None:
+                self._loop.call_soon(self.__step)
 
     def done(self):
         return self._done

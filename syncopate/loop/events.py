@@ -122,6 +122,15 @@ class LoopServerMixin:
             self.selector.modify(fd, selectors.EVENT_WRITE, callback)
 
 
+class Handle:
+    def __init__(self, callback, args) -> None:
+        self._callback = callback
+        self._args = args
+
+    def _run(self):
+        self._callback(*self._args)
+
+
 class EventLoop(LoopServerMixin):
     def __init__(self):
         super().__init__()
@@ -131,9 +140,8 @@ class EventLoop(LoopServerMixin):
     def run_forever(self):
         while not self.stopped:
             while self.tasks:
-                task = self.tasks.popleft()
-                # TODO: Improve task handling using a handler class within the loop
-                task()
+                handle = self.tasks.popleft()
+                handle._run()
 
             events = self.selector.select()
             for key, _mask in events:
@@ -156,6 +164,6 @@ class EventLoop(LoopServerMixin):
             task.cancel()
         self.tasks.clear()
 
-    def call_soon(self, callback):
-        # TODO: Wrap in Handle class
-        self.tasks.append(callback)
+    def call_soon(self, callback, *args):
+        handle = Handle(callback, args)
+        self.tasks.append(handle)
