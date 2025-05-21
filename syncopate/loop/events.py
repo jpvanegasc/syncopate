@@ -16,7 +16,6 @@ class Server:
         self._loop.start_serving(self.protocol_factory, self.socket)
 
     def close(self):
-        # TODO: call on loop shutdown?
         self.socket.close()
 
 
@@ -71,11 +70,11 @@ class Transport:
         self.protocol.connection_lost(None)
 
 
-class EventLoop:
-    def __init__(self):
+class LoopServerMixin:
+    """Implementation of HTTP server-related APIs"""
+
+    def __init__(self) -> None:
         self.selector = selectors.DefaultSelector()
-        self.stopped = False
-        self.tasks = deque()
 
     def create_server(self, protocol_factory, host, port):
         server_socket = socket.socket()
@@ -122,6 +121,13 @@ class EventLoop:
         else:
             self.selector.modify(fd, selectors.EVENT_WRITE, callback)
 
+
+class EventLoop(LoopServerMixin):
+    def __init__(self):
+        super().__init__()
+        self.stopped = False
+        self.tasks = deque()
+
     def run_forever(self):
         while not self.stopped:
             while self.tasks:
@@ -151,6 +157,5 @@ class EventLoop:
         self.tasks.clear()
 
     def call_soon(self, callback):
-        # TODO: this is the way, remove from self.create_tasks
-        # This is done by the task itself on init: https://github.com/python/cpython/blob/1bc16504ef3866cc419f3781eef6528b93aee6b4/Lib/asyncio/tasks.py#L112
+        # TODO: Wrap in Handle class
         self.tasks.append(callback)
