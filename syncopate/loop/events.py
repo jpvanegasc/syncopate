@@ -121,6 +121,11 @@ class LoopServerMixin:
         else:
             self.selector.modify(fd, selectors.EVENT_WRITE, callback)
 
+    def close(self):
+        if self.selector is not None:
+            self.selector.close()
+            self.selector = None
+
 
 class Handle:
     def __init__(self, callback, args) -> None:
@@ -158,8 +163,11 @@ class EventLoop(LoopServerMixin):
     def close(self):
         if self.stopped:
             return
+
+        super().close()
+
         self.stopped = True
-        self.selector.close()
+
         for task in self.tasks:
             task.cancel()
         self.tasks.clear()
