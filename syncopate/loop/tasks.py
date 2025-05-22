@@ -12,7 +12,6 @@ class Task(Future):
             raise TypeError("coro must be a coroutine object")
         self.coro = coro
         self.name = name or repr(coro)
-        self._done = False
 
         self._loop.call_soon(self.__step)
 
@@ -23,16 +22,9 @@ class Task(Future):
         try:
             result = self.coro.send(self._result)
         except StopIteration as e:
-            # TODO: Improve with Future
-            # When inheriting from future set with Future.set_result()
-            self._result = e.value
-            self._done = True
-
-            for callback in self._callbacks:
-                self._loop.call_soon(callback, self)
+            self.set_result(e.value)
         except Exception as e:
-            self._exception = e
-            self._done = True
+            self.set_exception(e)
         else:
             if result is None:
                 self._loop.call_soon(self.__step)

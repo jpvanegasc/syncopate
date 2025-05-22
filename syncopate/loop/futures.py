@@ -36,7 +36,7 @@ class Future:
         return self._state == CANCELLED
 
     def exception(self):
-        if not self._done:
+        if not self.done():
             raise exceptions.InvalidStateError("Task is not done")
         if self._cancelled:
             raise exceptions.CancelledError("Task was cancelled")
@@ -44,9 +44,17 @@ class Future:
 
     def set_result(self, result):
         if self._state != PENDING:
-            raise RuntimeError("Invalid state error")
+            raise exceptions.InvalidStateError("Invalid state error")
         self._result = result
         self._state = FINISHED
+        self.__schedule_callbacks()
+
+    def set_exception(self, exception):
+        if self._state != PENDING:
+            raise exceptions.InvalidStateError("Invalid state error")
+        self._exception = exception
+        self._state = FINISHED
+        self.__schedule_callbacks()
 
     def add_done_callback(self, callback):
         if not callable(callback):
@@ -55,6 +63,15 @@ class Future:
 
     def remove_done_callback(self, callback):
         self.callbacks.discard(callback)
+
+    def __schedule_callbacks(self):
+        callbacks = self._callbacks
+        if not callbacks:
+            return
+
+        self._callbacks = []
+        for callback in callbacks:
+            self._loop.call_soon(callback, self)
 
     def __await__(self):
         if not self.done():
