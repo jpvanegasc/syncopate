@@ -4,6 +4,7 @@ Syncopate is an experimental ASGI framework that thrives on the polyrhythmic mag
 ### 📖 Table of Contents
 - ⚒ [Env Setup and Development](#-env-setup-and-development)
 - ⚙ [Running Syncopate](#-running-syncopate)
+- [Event loop diagram](#loop-diagram)
 
 ## ⚒ Env Setup and Development
 To set up your local environment for development run
@@ -36,3 +37,65 @@ import syncopate
 syncopate.run(app, host="localhost", port=8888)
 ```
 This will start the syncopate server and run the app on [http://localhost:8888](http://localhost:8888).
+
+## Loop Diagram
+```mermaid
+sequenceDiagram
+    box Loop
+    participant Q as Task Queue
+    participant H as Handle
+    participant A as API
+    end
+    box Task
+    participant T as Task API
+    participant F as Future API
+    end
+
+    A->>T: create_task
+    activate T
+    Note right of T: __init__
+    T->>A: call_soon
+    deactivate T
+
+    activate A
+    activate H
+    A->>H: 
+    note right of H: __init__
+    H->>A: 
+    deactivate H
+    A->>Q: queue.append
+    deactivate A
+
+    activate Q
+    loop every Handle in queue
+    Q->>H: Handle.step
+    activate Q
+    activate H
+    H->>T: Task.coro.send
+    activate T
+    activate T
+    alt send()
+        T->>A: call_soon
+        deactivate T
+activate A
+        activate H
+        A->>H: 
+        note right of H: __init__
+        H->>A: 
+        deactivate H
+        A->>Q: queue.append
+        deactivate A
+        deactivate Q
+    else raise StopIteration
+        deactivate T
+        T->>H: 
+        H->>F: set_result
+    end
+    deactivate H
+    end
+
+    activate F
+    Note right of F: _state, _result
+    deactivate F
+    F->>T: result
+```
