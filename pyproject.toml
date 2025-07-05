@@ -1,6 +1,14 @@
-[tool.ruff.lint]
-# pyflakes, pycodestyle, isort
-select = ["F", "E", "W", "I001", "B"]
+[project]
+name = "syncopate"
+version = "0.1.0"
+description = "An experimental ASGI framework built from the ground up."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typing-extensions>=4.14.1",
+]
 
-[tool.ruff.lint.isort]
-known-third-party = []
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+]
