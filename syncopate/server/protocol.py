@@ -55,7 +55,6 @@ class HTTPProtocol:
         self.loop.create_task(self.app(scope, self.receive, self.send))
 
     async def receive(self) -> ASGIReceiveEvent:
-
         if not self.content_length:
             return ASGIReceiveEvent(
                 type="http.request",
