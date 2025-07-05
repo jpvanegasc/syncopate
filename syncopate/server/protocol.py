@@ -7,15 +7,13 @@ from syncopate.server.common import (
     ASGIVersions,
     HTTPResponseBodyEvent,
     HTTPResponseStartEvent,
-    Request,
-    ResponseBody,
-    ResponseStart,
     Scope,
 )
+from syncopate.server.h11 import Request, ResponseBody, ResponseStart
 
 
 class HTTPProtocol:
-    """HTTP stream rotocol interface.
+    """HTTP stream protocol interface.
 
     State machine of calls:
 
