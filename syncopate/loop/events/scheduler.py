@@ -2,6 +2,8 @@ from collections import deque
 
 from syncopate.loop.tasks import Task
 
+from .server import _ServerLoop
+
 
 class Handle:
     def __init__(self, callback, args):
@@ -12,7 +14,7 @@ class Handle:
         self._callback(*self._args)
 
 
-class _SchedulerMixin:
+class EventLoop(_ServerLoop):
     """Implementation of schedule-related API"""
 
     def __init__(self):
@@ -38,3 +40,5 @@ class _SchedulerMixin:
         for _ in range(n_todo):
             handle = self._ready.popleft()
             handle._run()
+
+        self._process_events()

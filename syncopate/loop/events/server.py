@@ -68,11 +68,10 @@ class Transport:
         self.protocol.connection_lost(None)
 
 
-class _ServerMixin:
+class _ServerLoop:
     """Implementation of server-related APIs"""
 
     def __init__(self) -> None:
-        super().__init__()
         self.selector = selectors.DefaultSelector()
 
     def create_server(self, protocol_factory, host, port):
@@ -124,3 +123,9 @@ class _ServerMixin:
         if self.selector is not None:
             self.selector.close()
             self.selector = None
+
+    def _process_events(self):
+        events = self.selector.select()
+        for key, _mask in events:
+            callback = key.data
+            callback(key.fileobj)
