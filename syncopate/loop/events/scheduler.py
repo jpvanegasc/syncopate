@@ -12,7 +12,9 @@ class Handle:
         self._callback(*self._args)
 
 
-class EventLoop:
+class _SchedulerMixin:
+    """Implementation of schedule-related API"""
+
     def __init__(self):
         self._ready = deque()
         self._stopping = False
