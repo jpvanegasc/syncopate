@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := help
 
+.SILENT:
 .PHONY:
 
 init:
@@ -17,6 +18,9 @@ run_fastapi: $(VENV_DIR) ## Run the application
 
 lint: $(VENV_DIR) ## Run linters via pre-commit
 	uv run pre-commit run --all-files
+
+test:
+	PYTHONPATH=. uv run pytest
 
 help: ## Show this help message
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
