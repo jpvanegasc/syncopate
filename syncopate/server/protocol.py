@@ -15,6 +15,18 @@ from syncopate.server.common import (
 
 
 class HTTPProtocol:
+    """HTTP stream rotocol interface.
+
+    State machine of calls:
+
+      start -> CM [-> DR*] [-> ER?] -> CL -> end
+
+    * CM: connection_made()
+    * DR: data_received()
+    * ER: eof_received()
+    * CL: connection_lost()
+    """
+
     def __init__(self, app, loop):
         self.transport = None
         self.app = app
@@ -34,6 +46,12 @@ class HTTPProtocol:
         if b"\r\n\r\n" in self.buffer:
             request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
             self.handle_request(Request.from_bytes(request_bytes))
+
+    def eof_received(self):
+        return None
+
+    def connection_lost(self, exc):
+        logger.debug("Connection lost")
 
     def handle_request(self, request: Request):
         scope = Scope(
@@ -110,6 +128,3 @@ class HTTPProtocol:
         elif connection.lower() == "keep-alive":
             return False
         return False
-
-    def connection_lost(self, exc):
-        logger.debug("Connection lost")
