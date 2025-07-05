@@ -2,7 +2,9 @@ from unittest.mock import Mock
 
 import pytest
 
+from syncopate.loop import exceptions
 from syncopate.loop.events import EventLoop
+from syncopate.loop.tasks import Task
 
 
 @pytest.fixture
@@ -28,3 +30,26 @@ def test__run_once(loop):
 
     with pytest.raises(Exception, match="test exc"):
         loop._run_once()
+
+
+def test_create_task(loop):
+    def mock_coro():
+        yield 1
+        return 2
+
+    task = loop.create_task(mock_coro())
+
+    assert isinstance(task, Task)
+    assert loop._ready
+
+    loop._run_once()
+
+    assert loop._ready
+    assert task._val == 1
+    with pytest.raises(exceptions.InvalidStateError):
+        task.result()
+
+    loop._run_once()
+
+    assert not loop._ready
+    assert task.result() == 2

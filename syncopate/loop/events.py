@@ -1,5 +1,7 @@
 from collections import deque
 
+from syncopate.loop.tasks import Task
+
 
 class Handle:
     def __init__(self, callback, args):
@@ -24,7 +26,12 @@ class EventLoop:
     def call_soon(self, callback, *args):
         self._ready.append(Handle(callback, args))
 
+    def create_task(self, coro):
+        task = Task(coro, loop=self)
+        return task
+
     def _run_once(self):
-        while self._ready:
+        n_todo = len(self._ready)
+        for _ in range(n_todo):
             handle = self._ready.popleft()
             handle._run()
