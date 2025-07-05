@@ -16,6 +16,7 @@ class _SchedulerMixin:
     """Implementation of schedule-related API"""
 
     def __init__(self):
+        super().__init__()
         self._ready = deque()
         self._stopping = False
 
