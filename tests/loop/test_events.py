@@ -4,7 +4,7 @@ import pytest
 
 from syncopate.loop import exceptions
 from syncopate.loop.events import EventLoop
-from syncopate.loop.tasks import Task
+from syncopate.loop.tasks import Task, sleep
 
 
 @pytest.fixture
@@ -33,8 +33,8 @@ def test__run_once(loop):
 
 
 def test_create_task(loop):
-    def mock_coro():
-        yield 1
+    async def mock_coro():
+        await sleep(0)
         return 2
 
     task = loop.create_task(mock_coro())
@@ -45,7 +45,6 @@ def test_create_task(loop):
     loop._run_once()
 
     assert loop._ready
-    assert task._val == 1
     with pytest.raises(exceptions.InvalidStateError):
         task.result()
 

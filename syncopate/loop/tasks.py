@@ -1,4 +1,19 @@
+import types
+
 from syncopate.loop.futures import Future
+
+
+@types.coroutine
+def __sleep0():
+    yield
+
+
+async def sleep(delay):
+    if delay <= 0:
+        await __sleep0()
+        return
+    # TODO: implement?
+    return
 
 
 class Task(Future):
