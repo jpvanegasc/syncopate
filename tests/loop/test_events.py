@@ -20,3 +20,11 @@ def test__run_once(loop):
 
     assert not loop._ready
     mock_cb.assert_called_once_with(1, 2, 3)
+
+    mock_cb.reset_mock()
+    mock_cb.side_effect = Exception("test exc")
+
+    loop.call_soon(mock_cb)
+
+    with pytest.raises(Exception, match="test exc"):
+        loop._run_once()
