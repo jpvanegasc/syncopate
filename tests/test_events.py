@@ -12,7 +12,8 @@ def loop():
     yield EventLoop()
 
 
-def _test__run_once(loop):
+@pytest.mark.skip
+def test__run_once(loop):
     mock_cb = Mock()
     loop.call_soon(mock_cb, 1, 2, 3)
 
@@ -32,7 +33,8 @@ def _test__run_once(loop):
         loop._run_once()
 
 
-def _test_create_task(loop):
+@pytest.mark.skip
+def test_create_task(loop):
     async def mock_coro():
         await sleep(0)
         return 2
