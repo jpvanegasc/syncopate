@@ -21,3 +21,6 @@ def test_get(running_server):
     response = httpx.get(running_server + "/get/sync")
     assert response.status_code == 200
     assert response.text == "/get/sync"
+
+    response = httpx.post(running_server + "/get/sync")
+    assert response.status_code == 405
