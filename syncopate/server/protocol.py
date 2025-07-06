@@ -9,7 +9,7 @@ from syncopate.server.common import (
     HTTPResponseStartEvent,
     Scope,
 )
-from syncopate.server.h11 import Request, ResponseBody, ResponseStart
+from syncopate.server.h11 import Connection, Request, ResponseBody, ResponseStart
 
 
 class HTTPProtocol:
@@ -29,27 +29,35 @@ class HTTPProtocol:
         self.transport = None
         self.app = app
         self.loop = loop
-        self.buffer = b""
+        self.buffer = b""  # FIXME: deprecated by Connection
         self.content_length = None
         self.response_started = False
         self.response_complete = False
         self.headers = []
 
+        self._conn = Connection()
+
     def connection_made(self, transport):
         self.transport = transport
 
     def data_received(self, data):
-        self.buffer += data
-
-        if b"\r\n\r\n" in self.buffer:
-            request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
-            self.handle_request(Request.from_bytes(request_bytes))
+        self._conn.receive_data(data)
+        self.handle_events()
 
     def eof_received(self):
         return None
 
     def connection_lost(self, exc):
         logger.debug("Connection lost")
+
+    def handle_events(self):
+        while True:
+            event = self._conn.get_next_event()
+            if event is None:
+                return
+
+            if isinstance(event, Request):
+                self.handle_request(event)
 
     def handle_request(self, request: Request):
         scope = Scope(

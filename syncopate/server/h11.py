@@ -1,4 +1,5 @@
 import json
+from collections import deque
 from dataclasses import dataclass
 from typing import Any
 
@@ -65,3 +66,23 @@ class ResponseBody:
         elif not isinstance(self.body, bytes):
             raise ValueError(f"Invalid body type: {type(self.body)}")
         return self.body
+
+
+class Connection:
+    """Parse raw request bytes and expose a more convenient API for handling them"""
+
+    def __init__(self):
+        self.buffer = b""
+        self._events = deque()
+
+    def receive_data(self, data):
+        self.buffer += data
+
+        if b"\r\n\r\n" in self.buffer:
+            request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
+            self._events.append(Request.from_bytes(request_bytes))
+
+    def get_next_event(self):
+        if not self._events:
+            return None
+        return self._events.popleft()
