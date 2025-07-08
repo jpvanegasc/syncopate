@@ -68,19 +68,37 @@ class ResponseBody:
         return self.body
 
 
+@dataclass(frozen=True)
+class Data:
+    data: bytes
+
+
+@dataclass(frozen=True)
+class EndOfMessage:
+    pass
+
+
 class Connection:
     """Parse raw request bytes and expose a more convenient API for handling them"""
 
     def __init__(self):
         self.buffer = b""
         self._events = deque()
+        self.request_started = False
 
     def receive_data(self, data):
         self.buffer += data
 
-        if b"\r\n\r\n" in self.buffer:
+        if self.request_started:
+            self._events.append(Data(data=self.buffer))
+            self.buffer = b""
+        elif b"\r\n\r\n" in self.buffer and not self.request_started:
             request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
             self._events.append(Request.from_bytes(request_bytes))
+            self.request_started = True
+        elif b"\r\n\r\n" in self.buffer:
+            self._events.append(EndOfMessage())
+            self.request_started = False
 
     def get_next_event(self):
         if not self._events:
