@@ -29,7 +29,7 @@ class RequestResponseCycle:
             await app(self.scope, self.receive, self.send)
         except BaseException:
             if not self.response_started:
-                self.send_500_response()
+                await self.send_500_response()
             else:
                 self.transport.close()
 
