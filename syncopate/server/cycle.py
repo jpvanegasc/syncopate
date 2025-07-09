@@ -87,7 +87,7 @@ class RequestResponseCycle:
         await self.send(response_body_event)
 
     def _should_close(self):
-        connection = self.scope["headers"].get("Connection", "")
+        connection = dict(self.scope["headers"]).get("Connection", "")
         if connection.lower() == "close":
             return True
         elif connection.lower() == "keep-alive":
