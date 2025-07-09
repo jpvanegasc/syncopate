@@ -1,5 +1,10 @@
 # 🎶 Syncopate
-Syncopate is an experimental ASGI framework that thrives on the polyrhythmic magic of async Python. This project is built as a learning exercise, so it re-implements all the wheels posible: the `asyncio` event loop and server, [uvicorn](https://www.uvicorn.org/) HTTP ASGI server, and [starlette](https://www.starlette.io/) ASGI toolkit. __It is not meant for production!__ Use under your own risk.
+An experimental ASGI framework that thrives on the polyrhythmic magic of async Python.
+This project is built as a learning exercise, so it re-implements all the wheels posible:
+the `asyncio` event loop and server, [uvicorn](https://www.uvicorn.org/) HTTP ASGI
+server and [h11](https://h11.readthedocs.io/en/latest/) protocol library,
+and [starlette](https://www.starlette.io/) ASGI toolkit.
+__It is not meant for production!__ Use under your own risk.
 
 ### 📖 Table of Contents
 - ⚒ [Env Setup and Development](#-env-setup-and-development)
@@ -8,9 +13,10 @@ Syncopate is an experimental ASGI framework that thrives on the polyrhythmic mag
 ## ⚒ Env Setup and Development
 To set up your local environment for development run
 ```shell
-make envsetup
+make init
 ```
-This will create a virtual environment for the project and install the pre-commit hooks. Syncopate doesn't have any third-party requirements, it does everything itself!
+This will install all dev requirements using [uv](https://docs.astral.sh/uv/) and add
+the pre-commit hooks.
 
 ## ⚙ Running Syncopate
 Build an ASGI app:
