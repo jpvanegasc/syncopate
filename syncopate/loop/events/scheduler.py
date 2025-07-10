@@ -1,5 +1,6 @@
 from collections import deque
 
+from syncopate.loop.futures import Future
 from syncopate.loop.tasks import Task
 
 from .server import _ServerLoop
@@ -34,6 +35,10 @@ class EventLoop(_ServerLoop):
     def create_task(self, coro):
         task = Task(coro, loop=self)
         return task
+
+    def create_future(self):
+        future = Future(loop=self)
+        return future
 
     def _run_once(self):
         n_todo = len(self._ready)

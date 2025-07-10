@@ -1,5 +1,6 @@
 from typing import cast
 
+from syncopate.loop.locks import Event
 from syncopate.server.common import (
     ASGIReceiveEvent,
     ASGISendEvent,
@@ -12,10 +13,11 @@ from syncopate.server.h11 import ResponseBody, ResponseStart
 class RequestResponseCycle:
     """Interface for ASGI protocol"""
 
-    def __init__(self, scope, transport, connection):
+    def __init__(self, scope, transport, connection, flow):
         self.scope = scope
         self.transport = transport
         self.conn = connection
+        self.flow = flow
 
         self.body = b""
         self.more_body = True
@@ -23,6 +25,8 @@ class RequestResponseCycle:
         self.content_length = None
         self.response_started = False
         self.response_complete = False
+
+        self.message_event = Event()
 
     async def run_asgi_app(self, app):
         try:
@@ -34,6 +38,10 @@ class RequestResponseCycle:
                 self.transport.close()
 
     async def receive(self) -> ASGIReceiveEvent:
+        if not self.response_complete:
+            await self.message_event.wait()
+            self.message_event.clear()
+
         message = ASGIReceiveEvent(
             type="http.request",
             body=self.body,
@@ -44,6 +52,10 @@ class RequestResponseCycle:
 
     async def send(self, message: ASGISendEvent) -> None:
         message_type = message["type"]
+
+        if self.flow.write_paused:
+            await self.flow.drain()
+
         if not self.response_started:
             if message_type != "http.response.start":
                 raise RuntimeError("Response not started")

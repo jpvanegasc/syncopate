@@ -1,10 +1,40 @@
 from syncopate.logging import logger
+from syncopate.loop.locks import Event
 from syncopate.server.common import (
     ASGIVersions,
     Scope,
 )
 from syncopate.server.cycle import RequestResponseCycle
 from syncopate.server.h11 import Connection, Data, EndOfMessage, Request
+
+
+class FlowControl:
+    def __init__(self) -> None:
+        self.read_paused = False
+        self.write_paused = False
+        self._is_writable_event = Event()
+        self._is_writable_event.set()
+
+    async def drain(self) -> None:
+        await self._is_writable_event.wait()
+
+    def pause_reading(self) -> None:
+        if not self.read_paused:
+            self.read_paused = True
+
+    def resume_reading(self) -> None:
+        if self.read_paused:
+            self.read_paused = False
+
+    def pause_writing(self) -> None:
+        if not self.write_paused:
+            self.write_paused = True
+            self._is_writable_event.clear()
+
+    def resume_writing(self) -> None:
+        if self.write_paused:
+            self.write_paused = False
+            self._is_writable_event.set()
 
 
 class HTTPProtocol:
@@ -26,11 +56,13 @@ class HTTPProtocol:
         self.loop = loop
         self.headers = []
         self.cycle = None
+        self.flow = None
 
         self._conn = Connection()
 
     def connection_made(self, transport):
         self.transport = transport
+        self.flow = FlowControl()
 
     def data_received(self, data):
         self._conn.receive_data(data)
@@ -65,11 +97,16 @@ class HTTPProtocol:
                     server=None,
                 )
                 self.cycle = RequestResponseCycle(
-                    scope=scope, connection=self._conn, transport=self.transport
+                    scope=scope,
+                    connection=self._conn,
+                    transport=self.transport,
+                    flow=self.flow,
                 )
 
                 self.loop.create_task(self.cycle.run_asgi_app(self.app))
             elif isinstance(event, Data):
                 self.cycle.body += event.data
+                self.cycle.message_event.set()
             elif isinstance(event, EndOfMessage):
                 self.cycle.more_body = False
+                self.cycle.message_event.set()
