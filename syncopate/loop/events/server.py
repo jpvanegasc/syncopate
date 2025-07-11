@@ -1,9 +1,7 @@
 import selectors
 import socket
-from collections import deque
 
 from syncopate.logging import logger
-from syncopate.loop.tasks import Task
 
 
 class Server:
@@ -70,8 +68,8 @@ class Transport:
         self.protocol.connection_lost(None)
 
 
-class LoopServerMixin:
-    """Implementation of HTTP server-related APIs"""
+class _ServerLoop:
+    """Implementation of server-related APIs"""
 
     def __init__(self) -> None:
         self.selector = selectors.DefaultSelector()
@@ -126,52 +124,8 @@ class LoopServerMixin:
             self.selector.close()
             self.selector = None
 
-
-class Handle:
-    def __init__(self, callback, args) -> None:
-        self._callback = callback
-        self._args = args
-
-    def _run(self):
-        self._callback(*self._args)
-
-
-class EventLoop(LoopServerMixin):
-    def __init__(self):
-        super().__init__()
-        self.stopped = False
-        self.tasks = deque()
-
-    def run_forever(self):
-        while not self.stopped:
-            while self.tasks:
-                handle = self.tasks.popleft()
-                handle._run()
-
-            events = self.selector.select()
-            for key, _mask in events:
-                callback = key.data
-                callback(key.fileobj)
-
-    def create_task(self, coro, *, name=None):
-        task = Task(coro, name=name, loop=self)
-        return task
-
-    def all_tasks(self):
-        return self.tasks
-
-    def close(self):
-        if self.stopped:
-            return
-
-        super().close()
-
-        self.stopped = True
-
-        for task in self.tasks:
-            task.cancel()
-        self.tasks.clear()
-
-    def call_soon(self, callback, *args):
-        handle = Handle(callback, args)
-        self.tasks.append(handle)
+    def _process_events(self):
+        events = self.selector.select()
+        for key, _mask in events:
+            callback = key.data
+            callback(key.fileobj)

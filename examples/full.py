@@ -4,7 +4,7 @@ import time
 import syncopate
 from syncopate.framework import Syncopate
 from syncopate.framework.background import BackgroundTask, BackgroundTasks
-from syncopate.framework.responses import HTMLResponse
+from syncopate.framework.responses import HTMLResponse, JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ async def root(request):
         tasks = BackgroundTasks()
         tasks.add_task(BackgroundTask(async_background_task))
         tasks.add_task(BackgroundTask(sync_background_task))
-        return HTMLResponse("<h1>Hello, World!</h1>", background=tasks)
+        return JSONResponse(data, background=tasks)
     return HTMLResponse("<h1>Method Not Allowed</h1>", status=405)
 
 
