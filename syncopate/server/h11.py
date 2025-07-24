@@ -1,5 +1,4 @@
 import json
-from collections import deque
 from dataclasses import dataclass
 from typing import Any
 
@@ -78,29 +77,67 @@ class EndOfMessage:
     pass
 
 
+class Buffer:
+    def __init__(self):
+        self._data = bytearray()
+
+    def add_data(self, data):
+        self._data += data
+
+    def read_at_most(self, size):
+        out = self._data[:size]
+        if not out:
+            return None
+
+        del self._data[:size]
+
+        return out
+
+    def extract_first_line(self) -> bytes | None:
+        if b"\r\n\r\n" in self._data:
+            line, self._data = self._data.split(b"\r\n\r\n", 1)
+            return line
+        return None
+
+
+def read_first_line(buf: Buffer) -> Request | None:
+    first_line = buf.extract_first_line()
+    if first_line is None:
+        return None
+    return Request.from_bytes(first_line)
+
+
+class ContentLenghtReader:
+    def __init__(self, length: int) -> None:
+        self._length = length
+        self._remaining = length
+
+    def __call__(self, buf: Buffer) -> Data | EndOfMessage | None:
+        if self._remaining == 0:
+            return EndOfMessage()
+        data = buf.read_at_most(self._remaining)
+        if data is None:
+            return None
+        self._remaining -= len(data)
+        return Data(data=data)
+
+
 class Connection:
     """Parse raw request bytes and expose a more convenient API for handling them"""
 
     def __init__(self):
-        self.buffer = b""
-        self._events = deque()
-        self.request_started = False
+        self._buffer = Buffer()
+        self._reader = read_first_line
 
     def receive_data(self, data):
-        self.buffer += data
-
-        if self.request_started:
-            self._events.append(Data(data=self.buffer))
-            self.buffer = b""
-        elif b"\r\n\r\n" in self.buffer and not self.request_started:
-            request_bytes, self.buffer = self.buffer.split(b"\r\n\r\n", 1)
-            self._events.append(Request.from_bytes(request_bytes))
-            self.request_started = True
-        elif b"\r\n\r\n" in self.buffer:
-            self._events.append(EndOfMessage())
-            self.request_started = False
+        self._buffer.add_data(data)
 
     def get_next_event(self):
-        if not self._events:
-            return None
-        return self._events.popleft()
+        event = self._reader(self._buffer)
+
+        if isinstance(event, Request):
+            self._reader = ContentLenghtReader(event.content_length)
+        elif isinstance(event, EndOfMessage):
+            self._reader = read_first_line
+
+        return event
