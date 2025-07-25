@@ -20,10 +20,8 @@ lint: $(VENV_DIR) ## Run linters via pre-commit
 	uv run pre-commit run --all-files
 
 test:
-	PYTHONPATH=. uv run tests/app.py & export PID=$$!; \
-	echo "Server running at process $$PID"; \
-	PYTHONPATH=. uv run pytest; \
-	kill $$PID
+	PYTHONPATH=. uv run coverage run tests/app.py
+	uv run coverage html
 
 help: ## Show this help message
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

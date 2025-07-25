@@ -1,0 +1,89 @@
+{
+	"info": {
+		"_postman_id": "0062119f-74fc-4993-8308-2bf2fc73f4bc",
+		"name": "Syncopate",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17737857"
+	},
+	"item": [
+		{
+			"name": "Async GET",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Validate response\", function() {",
+							"    var responseBody = pm.response.text(); // Since the content type is text/html",
+							"    pm.expect(responseBody).to.equal(\"/async/get\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8888/async/get",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8888",
+					"path": [
+						"async",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Async POST",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Validate response\", function() {",
+							"    var responseBody = pm.response.text(); // Since the content type is text/html",
+							"    pm.expect(responseBody).to.equal('{\"async\": \"post\"}');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"async\":\"post\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8888/async/post",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8888",
+					"path": [
+						"async",
+						"post"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
