@@ -136,7 +136,7 @@ class Connection:
         event = self._reader(self._buffer)
 
         if isinstance(event, Request):
-            self._reader = ContentLenghtReader(event.content_length)
+            self._reader = ContentLenghtReader(event.content_length or 0)
         elif isinstance(event, EndOfMessage):
             self._reader = read_first_line
 
