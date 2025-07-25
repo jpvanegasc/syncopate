@@ -1,33 +1,29 @@
 .DEFAULT_GOAL := help
 
-VENV_DIR ?= .venv
-VENV_ACTIVATE = $(VENV_DIR)/bin/activate
-VENV_RUN = . $(VENV_ACTIVATE);
-
 .SILENT:
-
-$(VENV_DIR):
-	test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
-
 .PHONY:
 
-envsetup: $(VENV_DIR)
-	$(VENV_RUN) pip install --upgrade pip
-	$(VENV_RUN) pip install pre-commit
-	$(VENV_RUN) pre-commit autoupdate
-	$(VENV_RUN) pre-commit install
+init:
+	uv sync
+	uv run pre-commit install
 
 run: $(VENV_DIR) ## Run the application
-	$(VENV_RUN) PYTHONPATH=. python3 examples/full.py
+	PYTHONPATH=. uv run  examples/full.py
 
 run_starlette: $(VENV_DIR) ## Run the application
-	$(VENV_RUN) PYTHONPATH=. python3 examples/starlette_example.py
+	PYTHONPATH=. uv run  examples/starlette_example.py
 
 run_fastapi: $(VENV_DIR) ## Run the application
-	$(VENV_RUN) PYTHONPATH=. python3 examples/fastapi_example.py
+	PYTHONPATH=. uv run  examples/fastapi_example.py
 
 lint: $(VENV_DIR) ## Run linters via pre-commit
-	$(VENV_RUN) pre-commit run --all-files
+	uv run pre-commit run --all-files
+
+test:
+	PYTHONPATH=. uv run tests/app.py & export PID=$$!; \
+	echo "Server running at process $$PID"; \
+	PYTHONPATH=. uv run pytest; \
+	kill $$PID
 
 help: ## Show this help message
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

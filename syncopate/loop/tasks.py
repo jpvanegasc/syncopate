@@ -1,36 +1,33 @@
-import asyncio
+import types
 
-import syncopate.loop.exceptions as exceptions
 from syncopate.loop.futures import Future
 
 
-class Task(Future):
-    def __init__(self, coro, *, name=None, loop=None):
-        super().__init__(loop=loop)
+@types.coroutine
+def __sleep0():
+    yield
 
-        if not asyncio.iscoroutine(coro):
-            raise TypeError("coro must be a coroutine object")
-        self.coro = coro
-        self.name = name or repr(coro)
+
+async def sleep(delay):
+    if delay <= 0:
+        await __sleep0()
+        return
+    # TODO: implement?
+    return
+
+
+class Task(Future):
+    def __init__(self, coro, *, loop):
+        super().__init__(loop=loop)
+        self._coro = coro
+        self._val = None
 
         self._loop.call_soon(self.__step)
 
     def __step(self):
-        if self.done():
-            raise exceptions.InvalidStateError("__step() already done")
-
         try:
-            result = self.coro.send(self._result)
-        except StopIteration as e:
-            self.set_result(e.value)
-        except Exception as e:
-            self.set_exception(e)
+            self._val = self._coro.send(self._val)
+        except StopIteration as stop:
+            self.set_result(stop.value)
         else:
-            if result is None:
-                self._loop.call_soon(self.__step)
-
-    def set_name(self, name):
-        self.name = name
-
-    def get_name(self):
-        return self.name
+            self._loop.call_soon(self.__step)
