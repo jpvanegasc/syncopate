@@ -1,3 +1,4 @@
+import logging
 from typing import cast
 
 from syncopate.loop.locks import Event
@@ -8,6 +9,8 @@ from syncopate.server.common import (
     HTTPResponseStartEvent,
 )
 from syncopate.server.h11 import ResponseBody, ResponseStart
+
+logger = logging.getLogger(__name__)
 
 
 class RequestResponseCycle:
@@ -35,6 +38,7 @@ class RequestResponseCycle:
             if not self.response_started:
                 await self.send_500_response()
             else:
+                logger.exception("Error in ASGI application")
                 self.transport.close()
 
     async def receive(self) -> ASGIReceiveEvent:
