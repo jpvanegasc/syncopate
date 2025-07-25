@@ -24,7 +24,7 @@ class Request:
         for line in lines[1:]:
             if not line.strip():
                 break
-            key, value = line.split(b":", 1)
+            key, value = bytes(line).split(b":", 1)
             headers.append((key.strip(), value.strip()))
             if key.lower() == b"content-length":
                 content_length = int(value)
