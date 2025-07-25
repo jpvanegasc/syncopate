@@ -14,7 +14,6 @@ dev = [
     "debugpy>=1.8.14",
     "httpx>=0.28.1",
     "pre-commit>=4.2.0",
-    "pytest>=8.4.1",
 ]
 
 [tool.coverage.run]
