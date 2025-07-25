@@ -58,6 +58,8 @@ class HTTPProtocol:
         self.cycle = None
         self.flow = None
 
+        self._tasks = set()
+
         self._conn = Connection()
 
     def connection_made(self, transport):
@@ -73,6 +75,9 @@ class HTTPProtocol:
 
     def connection_lost(self, exc):
         logger.debug("Connection lost")
+
+        if self.flow is not None:
+            self.flow.resume_writing()
 
     def handle_events(self):
         while True:
@@ -103,7 +108,9 @@ class HTTPProtocol:
                     flow=self.flow,
                 )
 
-                self.loop.create_task(self.cycle.run_asgi_app(self.app))
+                task = self.loop.create_task(self.cycle.run_asgi_app(self.app))
+                task.add_done_callback(self._tasks.discard)
+                self._tasks.add(task)
             elif isinstance(event, Data):
                 self.cycle.body += event.data
                 self.cycle.message_event.set()
