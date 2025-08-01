@@ -1,6 +1,6 @@
-import logging
 from typing import cast
 
+from syncopate.logging import logger
 from syncopate.loop.locks import Event
 from syncopate.server.common import (
     ASGIReceiveEvent,
@@ -9,8 +9,6 @@ from syncopate.server.common import (
     HTTPResponseStartEvent,
 )
 from syncopate.server.h11 import ResponseBody, ResponseStart
-
-logger = logging.getLogger(__name__)
 
 
 class RequestResponseCycle:
