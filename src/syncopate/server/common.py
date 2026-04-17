@@ -1,8 +1,6 @@
 import enum
 import http
-from typing import Any, Iterable, Literal, TypedDict, Union
-
-from typing_extensions import NotRequired
+from typing import Any, Iterable, Literal, TypedDict, Union, NotRequired
 
 
 def _get_status_phrase(status_code: int) -> str:
