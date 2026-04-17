@@ -1,7 +1,7 @@
 [project]
-name = "syncopate"
+name = "syncopate-runtime"
 version = "0.1.0"
-description = "An experimental ASGI framework built from the ground up."
+description = "An experimental ASGI runtime built from the ground up."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
