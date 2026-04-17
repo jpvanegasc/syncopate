@@ -33,10 +33,10 @@ class RequestResponseCycle:
         try:
             await app(self.scope, self.receive, self.send)
         except BaseException:
+            logger.exception("Error in ASGI application")
             if not self.response_started:
                 await self.send_500_response()
             else:
-                logger.exception("Error in ASGI application")
                 self.transport.close()
 
     async def receive(self) -> ASGIReceiveEvent:
