@@ -1,11 +1,15 @@
 import logging
 import time
 
-import syncopate
-from syncopate.framework import Syncopate
-from syncopate.framework.background import BackgroundTask, BackgroundTasks
-from syncopate.framework.requests import Request
-from syncopate.framework.responses import HTMLResponse, JSONResponse
+from syncopate import (
+    BackgroundTask,
+    BackgroundTasks,
+    HTMLResponse,
+    JSONResponse,
+    Request,
+    Syncopate,
+    run,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,4 +44,4 @@ async def async_post(request: Request):
 
 
 if __name__ == "__main__":
-    syncopate.run(app)
+    run(app)

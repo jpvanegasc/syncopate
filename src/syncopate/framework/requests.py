@@ -1,14 +1,21 @@
 import json
+from collections.abc import AsyncIterator, Awaitable, Callable
+from typing import Any
+
+Scope = dict[str, Any]
+Message = dict[str, Any]
+Receive = Callable[[], Awaitable[Message]]
+Send = Callable[[Message], Awaitable[None]]
 
 
 class Request:
-    def __init__(self, scope, receive, send):
+    def __init__(self, scope: Scope, receive: Receive, send: Send) -> None:
         self.scope = scope
         self.receive = receive
         self.send = send
         self._stream_consumed = False
 
-    async def stream(self):
+    async def stream(self) -> AsyncIterator[bytes]:
         if hasattr(self, "_body"):
             yield self._body
             yield b""
@@ -24,7 +31,7 @@ class Request:
                 break
         yield b""
 
-    async def body(self):
+    async def body(self) -> bytes:
         if not hasattr(self, "_body"):
             body = b""
             async for chunk in self.stream():
@@ -32,7 +39,7 @@ class Request:
             self._body = body
         return self._body
 
-    async def json(self):
+    async def json(self) -> Any:
         if not hasattr(self, "_json"):
             body = await self.body()
             self._json = json.loads(body)
