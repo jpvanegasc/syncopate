@@ -1,7 +1,7 @@
 Syncopate
 =======================
 
-An experimental ASGI framework, build from the ground up.
+An experimental ASGI runtime and framework, build from the ground up.
 
 .. toctree::
    :maxdepth: 2
