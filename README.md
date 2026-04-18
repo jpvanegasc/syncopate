@@ -50,7 +50,7 @@ This will start the syncopate server and run the app on [http://localhost:8888](
 To set up your local environment for development run
 
 ```shell
-make init
+just init
 ```
 
 This will install all (Python) dev requirements using [uv](https://docs.astral.sh/uv/)
@@ -69,5 +69,5 @@ Testing syncopate is done via:
 Run them with:
 
 ```shell
-make test
+just test
 ```

@@ -6,7 +6,7 @@
 init:
 	uv sync
 	uv run pre-commit install
-	@command -v hurl >/dev/null 2>&1 || echo "note: install hurl (e.g. 'brew install hurl') to run 'make test'"
+	@command -v hurl >/dev/null 2>&1 || echo "note: install hurl (e.g. 'brew install hurl') to run 'just test'"
 
 # Run linters via pre-commit
 [group('qa')]
