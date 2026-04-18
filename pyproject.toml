@@ -30,3 +30,4 @@ module-root = "src"
 include = [
     "src/*"
 ]
+sigterm = true

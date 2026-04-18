@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.11"
 
 [options]
-exclude-newer = "2026-04-10T21:21:06.893952Z"
+exclude-newer = "2026-04-11T07:40:07.070293Z"
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -601,7 +601,7 @@ wheels = [
 ]
 
 [[package]]
-name = "syncopate"
+name = "syncopate-runtime"
 version = "0.1.0"
 source = { editable = "." }
 
